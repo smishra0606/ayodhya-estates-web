@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
           subject: '🕉️ New Inquiry - Ayodhya Estate',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px;">
-              <h2>🕊️ New Site Visit Request</h2>
+              <h2>🕊️ New Inquiry Request</h2>
               <p><strong>Name:</strong> ${name}</p>
               <p><strong>Phone:</strong> ${phone}</p>
               <p><strong>Message:</strong> ${message || 'No message'}</p>
