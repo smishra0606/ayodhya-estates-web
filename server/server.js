@@ -22,10 +22,10 @@ app.use(cors({
     'http://www.ayodhyaestate.com',
     'https://ayodhyaestates.netlify.app',
     'http://localhost:3000',
-    'http://localhost:3001'
+    'http://localhost:3001',
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control'],
   credentials: true
 }));
 // -----------------------------------
