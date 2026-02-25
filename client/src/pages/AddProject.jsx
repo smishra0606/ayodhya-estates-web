@@ -285,8 +285,9 @@ const AddProject = () => {
                   <div className="mt-4 rounded-lg overflow-hidden shadow-md">
                     <img
                       src={formData.heroImage}
-                      alt="Hero preview"
+                      alt="Main banner preview for property listing"
                       className="w-full h-64 object-cover"
+                      loading="lazy"
                     />
                   </div>
                 )}
@@ -324,8 +325,9 @@ const AddProject = () => {
                       <div key={idx} className="relative group rounded-lg overflow-hidden shadow-md">
                         <img
                           src={img}
-                          alt={`Gallery ${idx}`}
+                          alt={`Gallery view ${idx + 1} - Property showcasing amenities and features`}
                           className="w-full h-32 object-cover"
+                          loading="lazy"
                         />
                         <button
                           type="button"

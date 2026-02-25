@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Projects.css';
+import SkeletonCard from './SkeletonCard';
+import { optimizeThumbnailImage } from '../utils/imageOptimizer';
+import { fetchProjects } from '../utils/fetchWithTimeout';
+import API_URL from '../config/api';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -8,37 +12,23 @@ const Projects = () => {
   const [error, setError] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
 
+  const loadProjects = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const data = await fetchProjects(API_URL);
+      setProjects(data || []);
+    } catch (err) {
+      console.error("Projects Fetch Error:", err);
+      setError(err.message || 'Failed to load projects');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // At the top of your component or inside the useEffect
-const fetchProjects = async () => {
-  try {
-    setLoading(true);
-    
-    // FORCE the full Render URL here
-    const API_URL = 'https://ayodhya-estates-web.onrender.com';
-    const response = await fetch(`${API_URL}/api/projects`);
-
-    // Guard against HTML response
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error("Received HTML instead of JSON. Check the API URL.");
-    }
-
-    const jsonData = await response.json();
-    
-    // Note: Your backend response structure is { success: true, data: [...] }
-    if (jsonData.success) {
-      setProjects(jsonData.data);
-    }
-  } catch (err) {
-    console.error("Projects Fetch Error:", err);
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
-
-    fetchProjects();
+    loadProjects();
   }, []);
 
   const filteredProjects = activeFilter === 'All' 
@@ -50,18 +40,36 @@ const fetchProjects = async () => {
     return text.substring(0, maxLength) + '...';
   };
 
-  if (loading) {
-    return (
-      <div className="projects-message-container">
-        <p className="projects-message">Loading projects...</p>
-      </div>
-    );
-  }
+  const handleRetry = () => {
+    loadProjects();
+  };
 
   if (error) {
     return (
       <div className="projects-message-container">
         <p className="projects-message error">Error: {error}</p>
+        <button 
+          onClick={handleRetry}
+          className="retry-button"
+          style={{
+            marginTop: '1rem',
+            padding: '0.75rem 2rem',
+            fontSize: '1rem',
+            fontWeight: '600',
+            color: 'white',
+            backgroundColor: 'var(--saffron)',
+            border: 'none',
+            borderRadius: '50px',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            fontFamily: "'Poppins', sans-serif"
+          }}
+          onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+          onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+        >
+          <i className="fas fa-redo" style={{ marginRight: '0.5rem' }}></i>
+          Retry
+        </button>
       </div>
     );
   }
@@ -101,48 +109,56 @@ const fetchProjects = async () => {
       </div>
 
       <div className="projects-grid">
-        {filteredProjects.map((project) => (
-          <Link 
-            key={project._id} 
-            to={`/projects/${project.slug}`}
-            className="project-card"
-            style={{ textDecoration: 'none', color: 'inherit' }}
-          >
-            <div className="image-wrapper">
-              <img 
-                src={project.heroImage} 
-                alt={project.name}
-              />
-              <span className="status-badge">{project.status}</span>
-            </div>
-
-            <div className="card-content">
-              <h3>{project.name}</h3>
-              <p className="location">
-                <i className="fas fa-map-marker-alt"></i>
-                {project.location || project.tagline || 'Ayodhya'}
-              </p>
-              <p className="description">
-                {truncateDescription(project.description)}
-              </p>
-            </div>
-
-            <div className="card-highlights">
-              {Array.isArray(project.amenities) && project.amenities.slice(0, 2).map((amenity, index) => (
-                <span key={index}>{amenity}</span>
-              ))}
-            </div>
-
-            <div className="card-footer">
-              <div className="btn-view">
-                View Project
+        {loading ? (
+          // Display 6 skeleton cards while loading
+          Array.from({ length: 6 }).map((_, index) => (
+            <SkeletonCard key={index} />
+          ))
+        ) : (
+          filteredProjects.map((project) => (
+            <Link 
+              key={project._id} 
+              to={`/projects/${project.slug}`}
+              className="project-card"
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
+              <div className="image-wrapper">
+                <img 
+                  src={optimizeThumbnailImage(project.heroImage)} 
+                  alt={`${project.name} - ${project.status} residential project in Ayodhya offering premium plots and properties`}
+                  loading="lazy"
+                />
+                <span className="status-badge">{project.status}</span>
               </div>
-            </div>
-          </Link>
-        ))}
+
+              <div className="card-content">
+                <h3>{project.name}</h3>
+                <p className="location">
+                  <i className="fas fa-map-marker-alt"></i>
+                  {project.location || project.tagline || 'Ayodhya'}
+                </p>
+                <p className="description">
+                  {truncateDescription(project.description)}
+                </p>
+              </div>
+
+              <div className="card-highlights">
+                {Array.isArray(project.amenities) && project.amenities.slice(0, 2).map((amenity, index) => (
+                  <span key={index}>{amenity}</span>
+                ))}
+              </div>
+
+              <div className="card-footer">
+                <div className="btn-view">
+                  View Project
+                </div>
+              </div>
+            </Link>
+          ))
+        )}
       </div>
 
-      {filteredProjects.length === 0 && (
+      {!loading && filteredProjects.length === 0 && (
         <div className="projects-message-container">
           <p className="projects-message">No projects found in this category.</p>
         </div>

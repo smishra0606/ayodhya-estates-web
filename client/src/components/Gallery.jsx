@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Gallery.css';
+import { optimizeThumbnailImage, optimizeHeroImage } from '../utils/imageOptimizer';
+import API_URL from '../config/api';
 
 const Gallery = () => {
   const [galleryImages, setGalleryImages] = useState([]);
   const [projectImages, setProjectImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
-
-  // Hardcoded Backend URL for Production Stability
-  const API_URL = 'https://ayodhya-estates-web.onrender.com';
 
   // FIX: Added a guard to prevent toLowerCase() on undefined status
   const getStatusIcon = (status = '') => {
@@ -97,8 +96,8 @@ const Gallery = () => {
                     style={{ cursor: 'pointer' }}
                   >
                     <img 
-                      src={item.imageUrl} 
-                      alt={item.description || 'Panchi Vihar plot'} 
+                      src={optimizeThumbnailImage(item.imageUrl)} 
+                      alt={`${item.description || 'Panchi Vihar residential plot in Ayodhya'} - Premium property near Ram Mandir with modern amenities`} 
                       loading="lazy"
                     />
                     {/* FIX: Safe check for status before calling toLowerCase */}
@@ -138,7 +137,11 @@ const Gallery = () => {
             >
               <i className="fas fa-times"></i>
             </button>
-            <img src={selectedImage} alt="Full view" className="lightbox-image" />
+            <img 
+              src={optimizeHeroImage(selectedImage)} 
+              alt="Panchi Vihar Ayodhya property - Detailed view of premium residential plots and green landscapes" 
+              className="lightbox-image" 
+            />
           </div>
         </div>
       )}

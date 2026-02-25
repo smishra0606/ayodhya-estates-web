@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import './InquiryForm.css';
+import API_URL from '../config/api';
 
 const InquiryForm = () => {
   const [formData, setFormData] = useState({
@@ -10,9 +11,6 @@ const InquiryForm = () => {
     message: ''
   });
   const [submitting, setSubmitting] = useState(false);
-
-  // Hardcoded Backend URL for Production Stability
-  const API_URL = 'https://ayodhya-estates-web.onrender.com';
 
   const handleChange = (e) => {
     setFormData({
@@ -61,7 +59,7 @@ const InquiryForm = () => {
         <div className="form-container">
           <h2 style={{ borderLeftColor: 'var(--gold)', marginBottom: '1.2rem' }}>
             <i className="fas fa-om icon-saffron" aria-hidden="true" style={{ marginRight: '10px' }}></i>
-            Request Site Visit <br />
+            Request Inquiry <br />
             <span style={{ fontSize: '1.6rem' }}>for Panchi Vihar</span>
           </h2>
           <p style={{ marginBottom: '2rem', fontSize: '1.1rem' }}>

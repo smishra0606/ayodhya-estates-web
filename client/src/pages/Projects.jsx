@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { optimizeThumbnailImage } from '../utils/imageOptimizer';
+import { fetchProjects } from '../utils/fetchWithTimeout';
+import API_URL from '../config/api';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -8,32 +11,24 @@ const Projects = () => {
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState('All');
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // 1. Define the Base URL
-        const API_URL = 'https://ayodhya-estates-web.onrender.com'; 
-        // 2. Fetch using the absolute URL
-        const response = await fetch(`${API_URL}/api/projects`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch projects');
-        }
-        
-        const data = await response.json();
-        setProjects(data.data || []);
-        setFilteredProjects(data.data || []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadProjects = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await fetchProjects(API_URL);
+      setProjects(data || []);
+      setFilteredProjects(data || []);
+    } catch (err) {
+      console.error("Projects Fetch Error:", err);
+      setError(err.message || 'Failed to load projects');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchProjects();
+  useEffect(() => {
+    loadProjects();
   }, []);
 
   const handleFilter = (status) => {
@@ -44,6 +39,10 @@ const Projects = () => {
     } else {
       setFilteredProjects(projects.filter(p => p.status === status));
     }
+  };
+
+  const handleRetry = () => {
+    loadProjects();
   };
 
   if (loading) {
@@ -65,9 +64,19 @@ const Projects = () => {
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4" style={{ color: '#6F4E37' }}>Error</h1>
           <p className="text-xl mb-6" style={{ color: '#8B6F47' }}>{error}</p>
-          <Link to="/" className="px-6 py-3 text-white font-semibold rounded-lg transition hover:shadow-lg" style={{ backgroundColor: '#FF9933' }}>
-            Back to Home
-          </Link>
+          <div className="flex gap-4 justify-center">
+            <button 
+              onClick={handleRetry}
+              className="px-6 py-3 text-white font-semibold rounded-lg transition hover:shadow-lg"
+              style={{ backgroundColor: '#FF9933' }}
+            >
+              <i className="fas fa-redo" style={{ marginRight: '0.5rem' }}></i>
+              Retry
+            </button>
+            <Link to="/" className="px-6 py-3 text-white font-semibold rounded-lg transition hover:shadow-lg" style={{ backgroundColor: '#6F4E37' }}>
+              Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -130,9 +139,10 @@ const Projects = () => {
               >
                 <div className="relative h-64 overflow-hidden">
                   <img
-                    src={project.heroImage}
-                    alt={project.name}
+                    src={optimizeThumbnailImage(project.heroImage)}
+                    alt={`${project.name} - ${project.status} residential project in Ayodhya with premium plots and modern amenities`}
                     className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                   <span

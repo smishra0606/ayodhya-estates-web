@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Footer from '../components/Footer';
 import './ProjectDetail.css';
+import { optimizeHeroImage, optimizeThumbnailImage } from '../utils/imageOptimizer';
+import { fetchProjectBySlug } from '../utils/fetchWithTimeout';
+import API_URL from '../config/api';
 
 const ProjectDetail = () => {
   const { slug } = useParams();
@@ -10,53 +13,29 @@ const ProjectDetail = () => {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
 
+  const API_BASE = API_URL;
+
+  const loadProject = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log("Requesting project:", slug);
+      const data = await fetchProjectBySlug(API_BASE, slug);
+      setProject(data);
+    } catch (err) {
+      console.error("Fetch failure:", err);
+      setError(err.message || 'Failed to load project');
+    } finally {
+      setLoading(false);
+    }
+  }, [slug, API_BASE]);
+
   useEffect(() => {
-    const fetchProject = async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    
-    // We use a clean string without any possible hidden characters
-    const API_BASE = 'https://ayodhya-estates-web.onrender.com'.replace(/\/$/, "");
-    const cleanSlug = slug.trim();
-    const finalUrl = `${API_BASE}/api/projects/${cleanSlug}`;
-    
-    console.log("Requesting data from:", finalUrl);
-
-    const response = await fetch(finalUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
-
-    // This check stops the "Unexpected Token" error before it happens
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      console.error("Critical Error: Received HTML instead of JSON. Check the URL below.");
-      console.log("Failed URL:", finalUrl);
-      throw new Error("The server is sending back a web page instead of data. Please refresh.");
-    }
-
-    if (!response.ok) {
-      throw new Error(`Project not found (Status: ${response.status})`);
-    }
-
-    const jsonData = await response.json();
-    setProject(jsonData.data);
-  } catch (err) {
-    console.error("Fetch failure:", err);
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
-
     if (slug) {
-      fetchProject();
+      loadProject();
     }
-  }, [slug]);
+  }, [slug, loadProject]);
 
   useEffect(() => {
     if (selectedImage) {
@@ -85,6 +64,10 @@ const ProjectDetail = () => {
     return iconMap[icon.toLowerCase()] || 'fa-map-marker-alt';
   };
 
+  const handleRetry = () => {
+    loadProject();
+  };
+
   if (loading) {
     return (
       <div className="project-loading">
@@ -99,7 +82,15 @@ const ProjectDetail = () => {
       <div className="project-error">
         <h1 className="error-title">Oops!</h1>
         <p className="error-message">{error || 'Project not found'}</p>
-        <a href="/" className="error-button">Back to Home</a>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem' }}>
+          {error && (
+            <button onClick={handleRetry} className="error-button" style={{ cursor: 'pointer' }}>
+              <i className="fas fa-redo" style={{ marginRight: '0.5rem' }}></i>
+              Retry
+            </button>
+          )}
+          <a href="/" className="error-button">Back to Home</a>
+        </div>
       </div>
     );
   }
@@ -109,7 +100,7 @@ const ProjectDetail = () => {
       <div 
         className="project-hero"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${project.heroImage})`
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${optimizeHeroImage(project.heroImage)})`
         }}
       >
         <div className="project-hero-content">
@@ -180,7 +171,12 @@ const ProjectDetail = () => {
                   onClick={() => setSelectedImage(image)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <img src={image} alt={`Gallery ${idx + 1}`} className="gallery-image" />
+                  <img 
+                    src={optimizeThumbnailImage(image)} 
+                    alt={`${project.name} - Gallery view ${idx + 1} showing residential plots, amenities and project features in Ayodhya`} 
+                    className="gallery-image" 
+                    loading="lazy"
+                  />
                 </div>
               ))}
             </div>
@@ -219,7 +215,11 @@ const ProjectDetail = () => {
             <button className="lightbox-close" onClick={() => setSelectedImage(null)}>
               <i className="fas fa-times"></i>
             </button>
-            <img src={selectedImage} alt="Full view" className="lightbox-image" />
+            <img 
+              src={optimizeHeroImage(selectedImage)} 
+              alt={`${project.name} Ayodhya - High resolution view of residential property and development features`} 
+              className="lightbox-image" 
+            />
           </div>
         </div>
       )}
