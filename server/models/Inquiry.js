@@ -19,8 +19,8 @@ const inquirySchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['new', 'contacted', 'converted', 'closed'],
-    default: 'new'
+    enum: ['New', 'Contacted', 'Converted', 'Closed'],
+    default: 'New'
   }
 });
 

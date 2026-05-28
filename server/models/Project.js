@@ -2,15 +2,18 @@ const mongoose = require('mongoose');
 
 const projectSchema = new mongoose.Schema(
   {
+    projectName: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Project name cannot exceed 100 characters']
+    },
     name: {
       type: String,
-      required: [true, 'Please provide a project name'],
       trim: true,
       maxlength: [100, 'Project name cannot exceed 100 characters']
     },
     slug: {
       type: String,
-      required: [true, 'Please provide a slug'],
       unique: true,
       lowercase: true,
       trim: true
@@ -22,7 +25,6 @@ const projectSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: [true, 'Please provide a description'],
       trim: true
     },
     status: {
@@ -30,9 +32,18 @@ const projectSchema = new mongoose.Schema(
       enum: ['Upcoming', 'Ongoing', 'Completed'],
       default: 'Upcoming'
     },
+    location: {
+      type: String,
+      trim: true
+    },
+    totalInquiries: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
     heroImage: {
       type: String,
-      required: [true, 'Please provide a hero image URL']
+      trim: true
     },
     gallery: [
       {
@@ -69,5 +80,31 @@ const projectSchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
+// Middleware humesha schema close hone ke baad aata hai
+projectSchema.pre('validate', function syncProjectFields(next) {
+  if (!this.projectName && this.name) {
+    this.projectName = this.name;
+  }
+
+  if (!this.name && this.projectName) {
+    this.name = this.projectName;
+  }
+
+  if (!this.slug && (this.projectName || this.name)) {
+    const sourceName = (this.projectName || this.name || '').toString();
+    this.slug = sourceName
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  if (typeof this.totalInquiries !== 'number') {
+    this.totalInquiries = Number(this.totalInquiries) || 0;
+  }
+
+  next();
+});
 
 module.exports = mongoose.model('Project', projectSchema);

@@ -37,6 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/gallery', require('./routes/gallery'));
 app.use('/api/inquiry', require('./routes/inquiry'));
+app.use('/api/inquiries', require('./routes/inquiry'));
 app.use('/api/admin', require('./routes/admin'));
 
 // Health check for uptime monitoring
