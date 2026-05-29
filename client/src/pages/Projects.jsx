@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { optimizeThumbnailImage } from '../utils/imageOptimizer';
 import { fetchProjects } from '../utils/fetchWithTimeout';
 import API_URL from '../config/api';
+import PropertySlider from '../components/PropertySlider';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);

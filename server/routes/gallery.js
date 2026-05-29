@@ -14,16 +14,36 @@ const upload = multer({
 // @route   GET /api/gallery
 // @desc    Get all gallery images
 // @access  Public
+// @route   GET /api/gallery
+// @desc    Get all gallery images DIRECTLY from Cloudinary
+// @access  Public
 router.get('/', async (req, res) => {
   try {
-    const images = await Gallery.find().sort({ createdAt: -1 });
+    console.log("Fetching images directly from Cloudinary...");
+
+    // 🚀 Cloudinary ki Search API use kar rahe hain
+    const result = await cloudinary.search
+      .expression('resource_type:image') // Tumhare account ki saari photos nikal lega
+      .sort_by('created_at', 'desc')
+      .max_results(50) // Ek baar mein 50 photos
+      .execute();
+
+    // Frontend ko jis format mein data chahiye, usme convert kar rahe hain
+    const images = result.resources.map((img, index) => ({
+      _id: img.public_id || `cloud-${index}`,
+      imageUrl: img.secure_url,
+      cloudinaryId: img.public_id,
+      status: 'Available', // Default status for older photos
+      description: 'Premium Plot in Ayodhya',
+      createdAt: img.created_at
+    }));
+
     res.json(images);
   } catch (error) {
-    console.error('Error fetching gallery:', error);
-    res.status(500).json({ error: 'Failed to fetch gallery images' });
+    console.error('Error fetching from Cloudinary:', error);
+    res.status(500).json({ error: 'Failed to fetch gallery images from Cloudinary' });
   }
 });
-
 // @route   POST /api/gallery/upload
 // @desc    Upload image to Cloudinary and save to database
 // @access  Admin (Protected)

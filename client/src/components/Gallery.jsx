@@ -28,29 +28,44 @@ const Gallery = () => {
     }
   }, [selectedImage]);
 
-  const fetchGalleryData = async () => {
+const fetchGalleryData = async () => {
     try {
-      // FIX: Added API_URL to fetch requests to prevent 404 errors
-      const [galleryResponse, projectResponse] = await Promise.all([
-        axios.get(`${API_URL}/api/gallery`),
-        axios.get(`${API_URL}/api/projects/panchi-vihar`)
-      ]);
-      
-      setGalleryImages(galleryResponse.data || []);
-      
-      if (projectResponse.data.data && projectResponse.data.data.gallery) {
-        const images = projectResponse.data.data.gallery.map((imageUrl, idx) => ({
-          _id: `panchi-vihar-${idx}`,
-          imageUrl: imageUrl,
-          description: 'Panchi Vihar Project',
-          status: 'Available'
-        }));
-        setProjectImages(images);
+      let fetchedGallery = [];
+      let fetchedProject = [];
+
+      // 1. Fetch Real Gallery Images Independently
+      try {
+        const galleryResponse = await axios.get(`${API_URL}/api/gallery`);
+        if (galleryResponse.data && Array.isArray(galleryResponse.data)) {
+          fetchedGallery = galleryResponse.data;
+        }
+      } catch (err) {
+        console.error("Gallery API error:", err.message);
       }
+
+      // 2. Fetch Project Images Independently
+      try {
+        const projectResponse = await axios.get(`${API_URL}/api/projects/panchi-vihar`);
+        if (projectResponse.data && projectResponse.data.data && projectResponse.data.data.gallery) {
+          fetchedProject = projectResponse.data.data.gallery.map((imageUrl, idx) => ({
+            _id: `panchi-vihar-${idx}`,
+            imageUrl: imageUrl,
+            description: 'Panchi Vihar Project',
+            status: 'Available'
+          }));
+        }
+      } catch (err) {
+        console.error("Project API error (Project might not be created yet):", err.message);
+      }
+
+      // 3. Set the real data from database
+      setGalleryImages(fetchedGallery);
+      setProjectImages(fetchedProject);
       
-      setLoading(false);
     } catch (error) {
-      console.error('Error fetching gallery:', error);
+      console.error('Critical Error fetching data:', error);
+    } finally {
+      // Humesha loading false karo chahe error ho ya success
       setLoading(false);
     }
   };
