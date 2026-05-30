@@ -4,7 +4,7 @@ import './AdminPanel.css';
 // 🚀 DYNAMIC URL: Local par localhost chalega, Live hone par tumhara live link chalega
 const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:5000/api' 
-  : 'https://ayodhya-backend-live.onrender.com/api'; // Deployment ke waqt isko apne asli backend link se badal dena
+  : 'https://ayodhya-estates-web.onrender.com/api'; // Deployment ke waqt isko apne asli backend link se badal dena
 
 const AdminPanel = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
